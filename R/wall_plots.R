@@ -1,10 +1,12 @@
 library(ggplot2)
 library(dplyr)
+MINDEPTH = -10994
 
 plot_proportional_bathymetry <- function() {
   bathy <- sdmpredictors::load_layers('BO_bathymean', equalarea = TRUE, rasterstack = FALSE)[[1]]
   bv <- raster::values(bathy)
   bv <- bv[!is.na(bv) & bv <= 0]
+  bv <- c(bv, MINDEPTH)
   bv <- data.frame(bathy = bv)
   p <- ggplot(bv, aes(bathy)) +
     geom_density()
@@ -23,9 +25,8 @@ plot_proportional_bathymetry <- function() {
     scale_y_continuous(expand=expand_scale(c(0, 0))) +
     theme_minimal() +
     labs(x=NULL, y=NULL)
-  print(bathy_prop)
-
   ggsave('files/bathymetry_proportional.pdf', plot = bathy_prop, width = 20, height = 10, units = "cm")
+  bathy_prop
 }
 # plot_proportional_bathymetry()
 
@@ -74,9 +75,47 @@ collect_depth_statistics <- function() {
          nspecies_per_depth=nspecies_per_depth, aphia_at_depth=aphia_at_depth)
   })
 }
-# collect_depth_statistics()
+# rawdepthstats <- collect_depth_statistics()
 
-plot_percentage_species <- function() {
+qc_depth_stats <- function(depthstats) {
+  filter_mindepth <- function(depthstats, key) {
+    depthstats[[key]] <- depthstats[[key]] %>% filter(-1*depth > MINDEPTH)
+    depthstats
+  }
+  for (k in c('nrecords_per_depth', 'nspecies_per_depth', 'aphia_at_depth')) {
+    depthstats <- filter_mindepth(depthstats, k)
+  }
+  return(depthstats)
+}
+# depthstats <- qc_depth_stats(rawdepthstats)
+
+plot_nrecords <- function(depthstats) {
+  d <- depthstats$nrecords_per_depth
+  d_binned <- d %>% group_by(depth=floor(depth / 10)*10) %>% summarise(n = sum(n))
+
+  nrecords <- ggplot(d_binned, aes(y=log(n), x=-1*depth)) +
+    geom_bar(stat="identity", width=1, col="#a6bddb") +
+    coord_flip() +
+    scale_x_continuous(expand=expand_scale(c(0, 0))) +
+    scale_y_continuous(expand=expand_scale(c(0, 0)), breaks=NULL) +
+    theme_minimal() +
+    labs(x=NULL, y=NULL)
+  ggsave('files/nrecords_depth.pdf', plot = nrecords, width = 5, height = 10, units = "cm")
+  dev.off()
+  nrecords
+}
+# plot_nrecords(depthstats)
+
+plot_percentage_species <- function(depthstats) {
 
 }
-# plot_percentage_species()
+# plot_percentage_species(depthstats)
+
+
+plot_all <- function() {
+  plot_proportional_bathymetry()
+  rawdepthstats <- collect_depth_statistics()
+  depthstats <- qc_depth_stats(rawdepthstats)
+  plot_nrecords(depthstats)
+  plot_percentage_species(depthstats)
+}
