@@ -92,12 +92,9 @@ qc_depth_stats <- function(depthstats) {
 plot_nrecords <- function(depthstats) {
   d <- depthstats$nrecords_per_depth
   d[1,'n'] <- max(d[2:10, 'n']) # Depth: 0 has extremely high numbers
-  #d_binned <- d %>% group_by(depth=floor(depth+1 / 10)*10) %>% summarise(n = sum(n))
-  d_binned <- d %>% group_by(depth=(10^floor(log10(depth+1)))-1) %>% summarise(n = sum(n))
-  d_binned <- d_binned[-nrow(d_binned),] # remove last row (below 10000)
-  d_binned <- cbind(d_binned, width=c(9, 90, 900, 9000))
-  d_binned <- cbind(d_binned, center=c(4.5, 45+9, 450+99, 4500+999))
-  ggplot(d_binned, aes(y=n, x=-1*center, width=width)) +
+  d_binned <- d %>% group_by(depth=floor(depth+1 / 10)*10) %>% summarise(n = sum(n))
+
+  plot <- ggplot(d_binned, aes(y=log(n), x=-1*depth)) +
     geom_col(col="#a6bddb") +
     coord_flip() +
     scale_x_continuous(expand=expand_scale(c(0, 0))) +
@@ -105,9 +102,9 @@ plot_nrecords <- function(depthstats) {
     theme_minimal() +
     labs(x=NULL, y=NULL)
   cur_dev <- dev.cur()
-  ggsave('files/nrecords_depth.pdf', plot = nrecords, width = 5, height = 10, units = "cm")
+  ggsave('files/nrecords_depth.pdf', plot = plot, width = 5, height = 10, units = "cm")
   dev.set(cur_dev)
-  nrecords
+  plot
 }
 # plot_nrecords(depthstats)
 
@@ -116,7 +113,7 @@ plot_nspecies <- function(depthstats) {
   d[1,'n'] <- max(d[2:10, 'n']) # Depth: 0 has extremely high numbers
   d_binned <- d %>% group_by(depth=floor(depth / 10)*10) %>% summarise(n = sum(n))
 
-  plot <- ggplot(d_binned, aes(y=n, x=-1*depth)) +
+  plot <- ggplot(d_binned, aes(y=log(n), x=-1*depth)) +
     geom_bar(stat="identity", width=10, col="#a6bddb") +
     coord_flip() +
     scale_x_continuous(expand=expand_scale(c(0, 0))) +
@@ -128,7 +125,7 @@ plot_nspecies <- function(depthstats) {
   dev.set(cur_dev)
   plot
 }
-# plot_percentage_species(depthstats)
+# plot_nspecies(depthstats)
 
 
 plot_all <- function() {
