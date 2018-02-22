@@ -1,4 +1,5 @@
 library(ggplot2)
+library(dplyr)
 
 plot_proportional_bathymetry <- function() {
   bathy <- sdmpredictors::load_layers('BO_bathymean', equalarea = TRUE, rasterstack = FALSE)[[1]]
@@ -28,3 +29,54 @@ plot_proportional_bathymetry <- function() {
 }
 # plot_proportional_bathymetry()
 
+cache_call <- function(cachefile, expr, env = NULL) {
+  if(file.exists(cachefile)) {
+    return(readRDS(cachefile))
+  } else {
+    if(is.null(env)) {
+      env = parent.frame()
+    }
+    result <- eval(expr, envir = NULL, enclos = env)
+    saveRDS(result, cachefile)
+    return(result)
+  }
+}
+
+get_records_depth <- function(mindepth, maxdepth) {
+  cache_call(paste0('files/records_depth_',mindepth,'_',round(maxdepth),'.rds'), {
+    all_records_with_depth <- robis2::occurrence(startdepth = mindepth, enddepth = maxdepth)
+  })
+}
+
+collect_depth_statistics <- function() {
+  cache_call('files/depth_stats.rds', {
+
+    depths <- c(0, 5, 10, 50, 100, 150, 200, 400, 700, 1000, 1500, 2500, 4000, 6000, 8000, 120000)
+    # depths <- c(111, 112, 113)
+    all_aphia <- c()
+    nrecords_per_depth <- NULL
+    nspecies_per_depth <- NULL
+    aphia_at_depth <- NULL
+    for(i in 2:length(depths)) {
+      mindepth <- depths[i-1]
+      maxdepth <- depths[i]-0.000001
+      records <- get_records_depth(mindepth, maxdepth)
+      records <- records[!is.na(records$species), c('depth', 'worms_id')]
+      records$depth <- floor(records$depth) # floor to avoid rounding to the next min-max depth range, makes below easier
+
+      all_aphia <- union(all_aphia, unique(records$aphiaid))
+      nrecords_per_depth <- rbind(nrecords_per_depth, records %>% group_by(depth) %>% summarise(n = n()))
+      uniquespdepth <- unique(records)
+      aphia_at_depth <- rbind(aphia_at_depth, uniquespdepth)
+      nspecies_per_depth <- rbind(nspecies_per_depth, unique(records) %>% group_by(depth) %>% summarise(n = n()))
+    }
+    list(unique_aphia=all_aphia, nrecords_per_depth=nrecords_per_depth,
+         nspecies_per_depth=nspecies_per_depth, aphia_at_depth=aphia_at_depth)
+  })
+}
+# collect_depth_statistics()
+
+plot_percentage_species <- function() {
+
+}
+# plot_percentage_species()
