@@ -1,5 +1,6 @@
 library(ggplot2)
 library(dplyr)
+library(httr)
 MINDEPTH = -10994
 
 plot_proportional_bathymetry <- function() {
@@ -128,10 +129,35 @@ plot_nspecies <- function(depthstats) {
 # plot_nspecies(depthstats)
 
 
+plot_citations <- function() {
+  papers <- bind_rows(lapply(2001:2018, function(year) {
+    r <- httr::GET(paste0('http://backend.iobis.org/publications/',year))
+    npapers <- nrow(jsonlite::fromJSON(rawToChar(r$content)))
+    if(year < 2018) {
+      year <- year + c(0.25, 0.5, 0.75, 1)
+      npapers <- rep(npapers/4, 4)
+    } else {
+      year <- 2018.25
+    }
+    data_frame(year=year, npapers=npapers)
+  }))
+  plot <- ggplot(papers, aes(x=year, y=cumsum(npapers))) +
+    geom_area(fill="#888888") +
+    xlab("Year") +
+    ylab("Number of citing papers") +
+    theme_minimal()
+  cur_dev <- dev.cur()
+  ggsave('files/ncitations.pdf', plot = plot, width = 10, height = 10, units = "cm")
+  dev.set(cur_dev)
+  plot
+}
+
+
 plot_all <- function() {
   plot_proportional_bathymetry()
   rawdepthstats <- collect_depth_statistics()
   depthstats <- qc_depth_stats(rawdepthstats)
   plot_nrecords(depthstats)
   plot_nspecies(depthstats)
+  plot_citations()
 }
