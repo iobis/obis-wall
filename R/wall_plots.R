@@ -51,7 +51,7 @@ get_records_depth <- function(mindepth, maxdepth) {
 }
 
 collect_depth_statistics <- function() {
-  cache_call('files/depth_stats.rds', {
+  stats <- cache_call('files/depth_stats.rds', {
 
     depths <- c(0, 5, 10, 50, 100, 150, 200, 400, 700, 1000, 1500, 2500, 4000, 6000, 8000, 120000)
     # depths <- c(111, 112, 113)
@@ -75,6 +75,7 @@ collect_depth_statistics <- function() {
     list(unique_aphia=all_aphia, nrecords_per_depth=nrecords_per_depth,
          nspecies_per_depth=nspecies_per_depth, aphia_at_depth=aphia_at_depth)
   })
+  return(stats)
 }
 # rawdepthstats <- collect_depth_statistics()
 
@@ -86,6 +87,7 @@ qc_depth_stats <- function(depthstats) {
   for (k in c('nrecords_per_depth', 'nspecies_per_depth', 'aphia_at_depth')) {
     depthstats <- filter_mindepth(depthstats, k)
   }
+  depthstats$unique_aphia <- unique(depthstats$aphia_at_depth$worms_id)
   return(depthstats)
 }
 # depthstats <- qc_depth_stats(rawdepthstats)
@@ -128,6 +130,46 @@ plot_nspecies <- function(depthstats) {
 }
 # plot_nspecies(depthstats)
 
+redlist_status <- function(aphiaids) {
+  redlist <- cache_call('files/redlist_status.rds', {
+    bind_rows(lapply(aphiaids, function(aphiaid) {
+      tx <- robis::taxon(aphiaid = aphiaid)
+      if(!'redlist' %in% colnames(tx)) {
+        data.frame(worms_id=aphiaid, redlist=FALSE, status='')
+      } else {
+        tx[,c('worms_id', 'redlist', 'status')]
+      }
+    }))
+  })
+  colnames(redlist) <- c('aphiaid', 'redlist', 'status')
+  return(redlist)
+}
+
+plot_nredlist <- function(depthstats) {
+  redlist <- redlist_status(na.omit(depthstats$unique_aphia))
+  redlistaphia <- redlist %>% filter(redlist == TRUE) %>% select(aphiaid)
+  redlistdepth <- depthstats$aphia_at_depth %>% filter(worms_id %in% redlistaphia$aphiaid)
+  nredlist_per_depth <- redlistdepth %>% group_by(depth) %>% summarise(n = n())
+  nredlist_per_depth <- rbind(nredlist_per_depth,
+                              data_frame(depth = max(depthstats$aphia_at_depth$depth), n=0))
+
+  d <- nredlist_per_depth
+  d[1,'n'] <- max(d[2:10, 'n']) # Depth: 0 has extremely high numbers
+  d_binned <- d %>% group_by(depth=floor(depth / 10)*10) %>% summarise(n = sum(n))
+
+  plot <- ggplot(d_binned, aes(y=log(n), x=-1*depth)) +
+    geom_bar(stat="identity", width=10, col="#a6bddb") +
+    coord_flip() +
+    scale_x_continuous(expand=expand_scale(c(0, 0))) +
+    scale_y_continuous(expand=expand_scale(c(0, 0)), breaks=NULL) +
+    theme_minimal() +
+    labs(x=NULL, y=NULL)
+  cur_dev <- dev.cur()
+  ggsave('files/nredlist_depth.pdf', plot = plot, width = 5, height = 10, units = "cm")
+  dev.set(cur_dev)
+  plot
+}
+# plot_nredlist(depthstats)
 
 plot_citations <- function() {
   papers <- bind_rows(lapply(2001:2018, function(year) {
@@ -151,7 +193,7 @@ plot_citations <- function() {
   dev.set(cur_dev)
   plot
 }
-
+# plot_citations()
 
 plot_all <- function() {
   plot_proportional_bathymetry()
