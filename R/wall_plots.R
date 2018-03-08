@@ -1,6 +1,6 @@
 library(ggplot2)
 library(dplyr)
-library(httr)
+
 MINDEPTH = -10994
 
 plot_proportional_bathymetry <- function() {
@@ -195,6 +195,53 @@ plot_citations <- function() {
 }
 # plot_citations()
 
+
+get_nrecords_time <- function() {
+  cache_call('files/nrecords_time.rds', {
+    library(RPostgreSQL)
+    conn <- connect_obisdb('obisdb.vliz.be')
+    dbGetQuery(conn, 'SELECT yearcollected AS year, count(*) AS count FROM explore.points GROUP BY yearcollected order by yearcollected')
+  })
+}
+
+get_nspecies_time <- function() {
+  cache_call('files/nspecies_time.rds', {
+    library(RPostgreSQL)
+    conn <- connect_obisdb('obisdb.vliz.be')
+    dbGetQuery(conn, 'SELECT yearcollected AS year, count(*) AS count FROM (SELECT DISTINCT yearcollected, valid_id FROM explore.points) AS year_taxa GROUP BY yearcollected order by yearcollected')
+  })
+}
+
+plot_nrecords_time <- function() {
+  nrecordstime <- get_nrecords_time()
+  nrecordstime <- nrecordstime[complete.cases(nrecordstime),]
+  plot <- ggplot(nrecordstime, aes(y=log(count), x=year)) +
+    geom_bar(stat="identity", width=1, col="#a6bddb") +
+    scale_y_continuous(breaks=NULL) +
+    theme_minimal() +
+    labs(x=NULL, y=NULL)
+
+  cur_dev <- dev.cur()
+  ggsave('files/nrecords_time.pdf', plot = plot, width = 10, height = 5, units = "cm")
+  dev.set(cur_dev)
+  plot
+}
+
+plot_nspecies_time <- function() {
+  nnspeciestime <- get_nspecies_time()
+  data <- nnspeciestime[complete.cases(nnspeciestime),]
+  plot <- ggplot(data, aes(y=log(count), x=year)) +
+    geom_bar(stat="identity", width=1, col="#a6bddb") +
+    scale_y_continuous(breaks=NULL) +
+    theme_minimal() +
+    labs(x=NULL, y=NULL)
+
+  cur_dev <- dev.cur()
+  ggsave('files/nspecies_time.pdf', plot = plot, width = 10, height = 5, units = "cm")
+  dev.set(cur_dev)
+  plot
+}
+
 plot_all <- function() {
   plot_proportional_bathymetry()
   rawdepthstats <- collect_depth_statistics()
@@ -202,4 +249,6 @@ plot_all <- function() {
   plot_nrecords(depthstats)
   plot_nspecies(depthstats)
   plot_citations()
+  plot_nrecords_time()
+  plot_nspecies_time()
 }
