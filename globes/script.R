@@ -10,8 +10,8 @@ require(httr)
 require(R.utils)
 require(RPostgreSQL)
 
-datafile <- "records_4.dat"
-imagefile <- "records_mollweide.png"
+datafile <- "threatened_4.dat"
+imagefile <- "threatened_mollweide.png"
 #projection <- coord_map("ortho", orientation = c(50, -50, 10), xlim = c(-180, 180))
 projection <- coord_map("moll", xlim = c(-180, 180))
 #projection <- coord_map("ortho", orientation = c(-40, 100, 0), xlim = c(-180, 180))

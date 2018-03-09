@@ -10,8 +10,9 @@ require(R.utils)
 require(RPostgreSQL)
 
 level <- 4
-query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id inner join explore.taxon on taxon.id = points.valid_id where taxon.hab is true group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
-query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
+#query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id inner join explore.taxon on taxon.id = points.valid_id where taxon.hab is true group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
+#query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
+query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id inner join explore.taxon on taxon.id = points.valid_id where taxon.status in ('EX', 'EN', 'CR', 'EW', 'VU') group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
 
 host <- "obisdb-stage.vliz.be"
 db <- "obis"
@@ -33,5 +34,5 @@ doQuery <- function(query) {
 }
 data <- doQuery(query)
 
-save(data, file = "hab_4.dat")
+save(data, file = "threatened_4.dat")
   
