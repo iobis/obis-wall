@@ -10,41 +10,17 @@ require(httr)
 require(R.utils)
 require(RPostgreSQL)
 
-level <- 4
-datafile <- "records_4.dat"
-imagefile <- "records.png"
-projection <- coord_map("ortho", orientation = c(50, -50, 10), xlim = c(-180, 180))
+datafile <- "hab_4.dat"
+imagefile <- "hab_mollweide.png"
+#projection <- coord_map("ortho", orientation = c(50, -50, 10), xlim = c(-180, 180))
+projection <- coord_map("moll", xlim = c(-180, 180))
 #projection <- coord_map("ortho", orientation = c(-40, 100, 0), xlim = c(-180, 180))
 #projection <- coord_map("ortho", orientation = c(15, -50, 0), xlim = c(-180, 180))
 
-# load shapes
+# load data
 
-if (file.exists(datafile)) {
-  load(datafile)  
-} else {
-  host <- "obisdb-stage.vliz.be"
-  db <- "obis"
-  user <- "obisadmin"
-  password <- "8lu3Whale$"
-  drv <- dbDriver("PostgreSQL")
-  con <- dbConnect(drv, dbname=db, host=host, user=user, password=password)
-  dsn <- sprintf("PG:dbname=%s host=%s user=%s password=%s port=5432", db, host, user, password)
-  viewname <- "temp_view"
-  
-  ogrListLayers(dsn)
-  ogrDrivers()
-  
-  doQuery <- function(query) {
-    dbGetQuery(con, paste0("drop view if exists ", viewname))
-    dbGetQuery(con, paste0("create view ", viewname, " as ", query))
-    result <- readOGR(dsn = dsn, layer = viewname)
-    return(result)
-  }
-  
-  query <- sprintf("select hexgrid%s.id, hexgrid%s.geom, count(*) as records from hexgrid.hexgrid%s left join obis.positions on positions.hexgrid%s_id = hexgrid%s.id left join explore.points on points.position_id = positions.id group by hexgrid%s.id, hexgrid%s.geom", level, level, level, level, level, level, level)
-  data <- doQuery(query)
-  #save(data, file = datafile) 
-}
+load(datafile)  
+source("haedat.R")
 
 # process
 
@@ -52,14 +28,14 @@ hex <- fortify(data)
 data@data$id <- as.numeric(rownames(data@data))
 hex$id <- as.numeric(hex$id)
 hex <- left_join(hex, data@data[,c("id", "records")], by = "id")
+if (!exists("world")) {
+  nat <- readOGR("world", "OGRGeoJSON")
+  world <- fortify(nat)
+}
 
-nat <- readOGR("world", "OGRGeoJSON")
-world <- fortify(nat)
+# plot and save
 
-ggplot() +
-  geom_polygon(data = hex, aes(x = long, y = lat, fill = records, group = group)) +
-  scale_fill_distiller(limits = c(-1, 10000000), palette = "Spectral", trans = "log", labels = function (x) floor(x), na.value = "#eeeeee") +
-  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "black", color = "black") +
+baseplot <- ggplot() +
   projection +
   theme(
     panel.grid.major = element_blank(),
@@ -71,10 +47,19 @@ ggplot() +
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
-    axis.title.x=element_blank(),
+    axis.title.x = element_blank(),
     axis.title.y = element_blank(),
     legend.position = "none",
     legend.key.width = unit(3, "line")
   )
+baselayer <- geom_rect(data = data.frame(xmin = -180, xmax = 180, ymin = -90, ymax = 90), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), fill = "#ffffff")
+hexplot <- geom_polygon(data = hex, aes(x = long, y = lat, fill = records, group = group), fill = "#dddddd")
+hexscale <- scale_fill_distiller(limits = c(-1, 10000000), palette = "Spectral", trans = "log", labels = function (x) floor(x), na.value = "#eeeeee")
+hexscalegray <- scale_fill_gradient(low = "#eeeeee", high = "#aaaaaa", trans = "log")
+worldplot <- geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "black", color = "black")
+haedatplot <- geom_point(data = haedat, aes_string(x = "longitude", y = "latitude", size = "events", fill = "events"), stroke = 0.5, alpha = 1, shape = 21, colour = "white")
+haedatscale <- scale_radius(range = c(1, 12))
+
+baseplot + baselayer + hexplot + worldplot + haedatplot + haedatscale + scale_fill_distiller(palette = "YlOrRd", direction = 1)
 
 ggsave(file = imagefile, height = 14, width = 14, bg = "transparent")
