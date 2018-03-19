@@ -14,9 +14,18 @@ How is the study carried out? How is information collected? Through means of a s
 Global. See sankey diagram.
 
 **WHAT IS/WILL BE THE RESULT OF THE PROJECT?**  
-Research? Platform? Technology? Products? …?
+With the support from Flanders, OBIS can provide a technologically "smart" clearinghouse, providing a user-friendly interface to a trustworthy source of marine biodiversity research data and information, and one that can pursue innovative applications powered by the system.
 
 **COMMITMENTS (FOR THE FUTURE)**
+-Environmental data
+-Tracking data
+-DNA
+-eDNA
+-Image/video data
+-Quality annotations
+-Text mining for new records
+-Citizen science
+
 
 **SIGNIFICANT NUMBERS**
 +50 million records  
