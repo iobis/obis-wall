@@ -1,7 +1,7 @@
 # obis-wall
 
 **PROJECT NAME**  
-Development of Information Products and Services to support global assessments
+Development of Information Products and Services to support global assessments  
 [Long title] Development of Information Products and Services based on OBIS and HAEDAT to support the WOA, IPBES and a Global HAB Status Report (DIPS-4-Ocean Assessments)
 
 **MAIN PROJECT OBJECTIVE**  
