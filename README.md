@@ -8,13 +8,13 @@ Development of Information Products and Services to support global assessments
 This project aims to develop biodiversity information to support global assessments on the state of the marine environment, as well as publish an IOC-UNESCO Global Harmful Algal Bloom Status Report on the distribution and impact of harmful algae. This project makes use of data from the Ocean Biogeographic Information System (OBIS), the Harmful Algal Event Database (HAEDAT) and the IOC-UNESCO Taxonomic Reference List of Harmful Micro Algae.
 
 **METHODOLOGY**  
-How is the study carried out? How is information collected? Through means of a study? From researchers? From partners? 
+/
 
 **GEOGRAPHICAL SCOPE (COUNTRIES/INSTITUTIONS SHOWN ON MAP)**  
 Global. See sankey diagram.
 
 **WHAT IS/WILL BE THE RESULT OF THE PROJECT?**  
-With the support from Flanders, OBIS can provide a technologically "smart" clearinghouse, providing a user-friendly interface to a trustworthy source of marine biodiversity research data and information, and one that can pursue innovative applications powered by the system.
+OBIS aims to build a technologically "smart" clearing house, providing a user-friendly interface to a trustworthy source of marine biodiversity research data and information, and one that can pursue innovative applications powered by the system.
 
 **COMMITMENTS (FOR THE FUTURE)**
 -Environmental data
