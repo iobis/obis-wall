@@ -39,3 +39,8 @@ vignettes/*.pdf
 
 # ignore large files
 files/records_depth_*.rds
+
+# sankey
+**/sankey/result/
+**/sankey/result.csv
+**/sankey/points.csv
