@@ -10,8 +10,8 @@ require(httr)
 require(R.utils)
 require(RPostgreSQL)
 
-datafile <- "hex_4.dat"
-imagefile <- "undiscovered_mollweide.png"
+datafile <- "extinct_4.dat"
+imagefile <- "extinct_mollweide.png"
 #projection <- coord_map("ortho", orientation = c(50, -50, 10), xlim = c(-180, 180))
 projection <- coord_map("moll", xlim = c(-180, 180))
 #projection <- coord_map("ortho", orientation = c(-40, 100, 0), xlim = c(-180, 180))
@@ -61,14 +61,15 @@ hexplot <- geom_polygon(data = hex, aes(x = long, y = lat, fill = records, group
 hexplothab <- geom_polygon(data = hex, aes(x = long, y = lat, fill = records, group = group), fill = "#dddddd")
 hexscale <- scale_fill_distiller(limits = c(-1, 10000000), palette = "Spectral", trans = "log", labels = function (x) floor(x), na.value = "#eeeeee")
 hexscale_undiscovered <- scale_fill_distiller(limits = c(-1, 100000), palette = "Spectral", trans = "log", labels = function (x) floor(x), na.value = "#eeeeee")
+hexscale_extinct <- scale_fill_distiller(limits = c(-1, 1500), palette = "Spectral", trans = "log", labels = function (x) floor(x), na.value = "#eeeeee")
 hexscalegray <- scale_fill_gradient(low = "#eeeeee", high = "#aaaaaa", trans = "log")
 worldplot <- geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "black", color = "black")
 haedatplot <- geom_point(data = haedat, aes_string(x = "longitude", y = "latitude", size = "events", fill = "events"), stroke = 0.5, alpha = 1, shape = 21, colour = "white")
 haedatscale <- scale_radius(range = c(1, 12))
 
 #baseplot + baselayer + hexplothab + worldplot + haedatplot + haedatscale + scale_fill_distiller(palette = "YlOrRd", direction = 1)
-baseplot + baselayer + hexplot + hexscale_undiscovered + worldplot
+baseplot + baselayer + hexplot + hexscale_extinct + worldplot
 
 ggsave(file = imagefile, height = 7, width = 14, bg = "transparent")
 
-writeOGR(obj = data, dsn = "undiscovered", layer = "data", driver = "ESRI Shapefile", overwrite_layer = TRUE)
+#writeOGR(obj = data, dsn = "extinct", layer = "data", driver = "ESRI Shapefile", overwrite_layer = TRUE)
