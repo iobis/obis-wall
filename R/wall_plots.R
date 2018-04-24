@@ -95,7 +95,7 @@ qc_depth_stats <- function(depthstats) {
 plot_nrecords <- function(depthstats) {
   d <- depthstats$nrecords_per_depth
   d[1,'n'] <- max(d[2:10, 'n']) # Depth: 0 has extremely high numbers
-  d_binned <- d %>% group_by(depth=floor(depth+1 / 10)*10) %>% summarise(n = sum(n))
+  d_binned <- d %>% group_by(depth=floor((depth+1) / 10)*10) %>% summarise(n = sum(n))
 
   plot <- ggplot(d_binned, aes(y=log(n), x=-1*depth)) +
     geom_col(col="#a6bddb") +
