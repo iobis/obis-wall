@@ -4,7 +4,7 @@ require(RMySQL)
 require(stringr)
 require(ggplot2)
 
-getData <- function(host = "192.168.5.41", user = "iode_general", password = "bulk3pinj@", dbname = "haedat") {
+getData <- function(host = "192.168.5.41", user = "iode_general", password = "pcpo36!#33", dbname = "haedat") {
   con <- dbConnect(MySQL(), user = user, password = password, dbname = dbname, host = host)
   query <- read_file("haedat_query.sql")
   rs <- dbSendQuery(con, query)
